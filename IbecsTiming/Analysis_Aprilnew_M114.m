@@ -1,18 +1,14 @@
-
-
-
-
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Analyze IBECS session data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Initialize
-%clearvars
-%close all
+clearvars
+close all
 
 % Session info
 dFldrs = {
-      'D:\data\M56\20190501_postConditioning\Cond3';...
-%          'E:\data\M62\20190511\Cond1';...
+      'D:\data\M114\20190914\PostCond2\';...
+%          'D:\data\M89\20190918\cond1';...
 %         'E:\data\M62\20190512\Cond2';...
 %          'E:\data\M62\20190513\Cond3';...
 %         'E:\data\M62\20190515\PostCond2';...
@@ -394,6 +390,37 @@ COMPARISON(end)
 multcompare(STATS)
 % [h,p]=ttest2(lickRate(stimSeq==0,2), lickRate(stimSeq==3,2))
 % [h,p]=ttest2(lickRate(stimSeq==0,2), lickRate(stimSeq==4,2))
+%% How does lick behavior change over time
+
+xs= [1:length(lickCounts)];
+
+rows = 3;
+cols = 1;
+figure(3), clf, hold on
+
+subplot(rows,cols,1), hold all
+title('Trial total lick count in seuqnce')
+ylabel('Lick Count')
+plot(lickCounts)
+scatter(xs,lickCounts)
+lsline
+
+subplot(rows,cols,2), hold all
+title('Binned lick rate in seuqnce')
+ylabel('lick rate per bin')
+plot(lickRate)
+legend('Before','During','After')
+% trialXs = repmat(xs,3,1)';
+% scatter(trialXs(:), lickRate(:))
+% lsline
+
+subplot(rows,cols,3), hold all
+title('Binned lick ratio, Before:During, in seuqnce')
+xlabel('Time(s)')
+ylabel('Ratio of licks, Before:DuringLick')
+plot(lickRatio)
+scatter(1:length(lickRatio),lickRatio(:))
+lsline
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Pupil Analysis
@@ -435,8 +462,6 @@ beep
 acceptCrop= input('Accept Crop? Enter 1 to accept or 0 to reject: ')
 end
 %% Measure Pupil Session
-
-%plot settings
 
 showAllPlot = false;
 showMeasure = false;
@@ -547,8 +572,217 @@ beep
 
 save([dFldr 'pupilData.mat'],'pupilSizes','pupilVids','-v7.3')
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 
+pupilSizes % is cell array of diameters
+
+%% 
+% Convert pupilSizes to mat
+
+pupilsize_mat = pupilSizes
 
 
+s = length(pupilSizes);
+
+longest = 0;
+for j = 1:s
+    m = size(pupilsize_mat{j});
+    if m(1) > longest
+        longest = m(1);
+    end
+end
+
+cellmax = longest;
+a = pupilsize_mat{1};
+a = a';
+
+b = cellfun( @(c) [c(:) ; NaN(longest-numel(c),1)], pupilsize_mat,'un',0);
+
+d = nan(length(b{1}),length(b));
+
+for k = 1:length(b)
+    d(:,k) = b{k};
+% a = vertcat(a, b{k}');
+%     size(a)
+end
+size(d)
+%  a(isnan(a))=0;
+
+pupilsize_mat = d;
+%% 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Save pupilsize_mat
+
+
+%% %% 
+% Generate dt list
+
+pupilSizedt = cell(1,91) ;
+for u = 1:91 ; 
+    pupilsize = pupilSizes{u} ;
+    t = 1:length(pupilsize) ;
+    v = zeros(length(t)-1,1) ;
+    for i = 1:length(t)-1 ;
+      v(i) = (pupilsize(i+1)-pupilsize(i))/(t(i+1)-t(i)) ;
+      pupilSizedt{u} = v ;
+    end
+end
+
+%This is cell array of dt values
+pupilSizedt
+
+%% 
+
+pupilsize_filtered = cell(1,91);
+
+for index=1:91
+    disp(index)
+    pupilarea_dt = single(pupilSizedt{index}) ;
+    pupilarea_dt = [NaN;pupilSizedt{index}(1:end)];
+    
+    area_ses = pupilSizes{index};
+    %ses1 = table(area_ses1_dt, area_ses1);
+    % extract first row: ses1(1:501, 1)
+    isgoodframe = (-1.5 < pupilarea_dt & pupilarea_dt < 1.5) ;
+    area_ses(~isgoodframe) = nan;
+    
+    pupilsize_filtered{index} = area_ses;
+end
+
+pupilareaProc = pupilsize_filtered;  
+%%  
+
+num_sesplot = 1
+plot(pupilSizes{num_sesplot})
+hold on
+plot(pupilsize_filtered{num_sesplot})
+hold off
+
+
+%% Convert pupilsize_filtered to matrix
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+pupilsize_filtered_mat = pupilsize_filtered
+
+s = length(pupilSizes);
+
+longest = 0;
+for j = 1:s
+    m = size(pupilsize_filtered_mat{j});
+    if m(1) > longest
+        longest = m(1);
+    end
+end
+
+cellmax = longest;
+a = pupilsize_filtered_mat{1};
+a = a';
+
+b = cellfun( @(c) [c(:) ; NaN(longest-numel(c),1)], pupilsize_filtered_mat,'un',0);
+
+d = nan(length(b{1}),length(b));
+
+for k = 1:length(b)
+    d(:,k) = b{k};
+% a = vertcat(a, b{k}');
+%     size(a)
+end
+size(d)
+%  a(isnan(a))=0;
+
+pupilsize_filtered_mat = d;
+
+%% %% Interpolate through pupilsize_filtered
+
+% Outer for loop to iterate between different videos
+for u = 1:length(pupilsize_filtered)
+    
+   
+    %Inner for loop to iterate between different frames seraching for a Nan
+    for k = 1:length(pupilsize_filtered{1, u})
+        %counters to increment up or down frames to find the nearrest
+        %values in the while loops
+        j = 0;
+        m = 0;
+        %Variables to save the nearest values in
+        closest_prev = 0;
+        closest_next = 0;
+        
+        if isnan(pupilsize_filtered{1, u}(k))
+            
+            %find previous frame area 
+            while k - j > 0
+                if (k - j) == 1
+                    closest_prev = NaN;
+                    break;
+                end
+                if ~isnan(pupilsize_filtered{1, u}(k - j))
+                    closest_prev = pupilsize_filtered{1, u}(k-j);
+                end
+                j = j + 1;
+            end
+            
+            %find next frame area
+            while k + m < (length(pupilsize_filtered{1, u}) + 1)
+                if (k + m) == length(pupilsize_filtered{1, u})
+                    closest_next = NaN;
+                    break;
+                end
+                if ~isnan(pupilsize_filtered{1, u}(k + m))
+                    closest_next = pupilsize_filtered{1, u}(k+m);
+                    break;
+                end
+                m = m + 1;
+            end
+            
+            %average closest_next and closest_prev to get value for
+            %previous nan valued frame
+            if isnan(closest_prev)
+                average = closest_next;
+            elseif isnan(closesy_next)
+                average = closest_prev;
+            else
+                average = closest_prev + closest_next;
+            end
+            pupilsize_filtered{1, u}(k) = average;
+        end
+    end
+   
+end
+
+%% Convert interpolated pupilsize_filtered to matrix
+
+pupilsize_interp_mat = pupilsize_filtered
+
+s = length(pupilSizes);
+
+longest = 0;
+for j = 1:s
+    m = size(pupilsize_interp_mat{j});
+    if m(1) > longest
+        longest = m(1);
+    end
+end
+
+cellmax = longest;
+a = pupilsize_interp_mat{1};
+a = a';
+
+b = cellfun( @(c) [c(:) ; NaN(longest-numel(c),1)], pupilsize_interp_mat,'un',0);
+
+d = nan(length(b{1}),length(b));
+
+for k = 1:length(b)
+    d(:,k) = b{k};
+% a = vertcat(a, b{k}');
+%     size(a)
+end
+size(d)
+%  a(isnan(a))=0;
+
+pupilsize_interp_mat = d;
+
+save([dFldr 'M114_diameter_interp.mat'],'pupilsize_mat','-v7.3')
 %%  Pupil plots original 
 
 figure(7), clf
@@ -575,8 +809,116 @@ stimSeq = stimId-1;
 trialType = nan(size(trls));
 trialType(lckDels==-1 & ~stimSeq) = 1; % No Lickport, Blank
 trialType(lckDels==-1 & stimSeq) = 2; % No Lickport, Stimulus
-trialType(lckDels~=-1 & ~stimSeq) = 3; % Lickport, Blank
-trialType(lckDels~=-1 & stimSeq) = 4; % Lickport, Stimulus
+trialType(lckDels~=-1 & ~stimSeq) = 1; % Lickport, Blank
+trialType(lckDels~=-1 & stimSeq) = 2; % Lickport, Stimulus
+nTrialTypes = 4;
+%
+colors = {'k' 'g' 'b' 'c'};
+
+
+pupilSize500 = nan(nTrls,500);
+for u = 1:nTrls
+    pupilSize = pupilSizes{u};
+    
+    pupilSize500(u,1:length(pupilSize)) = (pupilSize-pupilSize(1))./pupilSize;
+end
+
+pupilAbsMax = max(pupilSize500(:));
+% pupilAbsMax = max(abs(pupilSize500(:)));
+pupilAllNorm = pupilSize500/pupilAbsMax;
+% wheelFreqTrlNorm = wheelFreqSmth./repmat(max(abs(wheelFreqSmth)')',1,length(wheelFreqSmth));
+
+trlSclr = .1;
+for v = trls
+    % compare raw, interpolated and smoothed data
+    % subplot(rows,cols,1), cla, hold on
+    % line([0 trlDur],[0 0],'color',[.5 .5 .5],'linestyle','--')
+    % plot(wheelTimes{v},wheelCounts{v},'-','color',color)
+    % plot(wheelTimeMs,wheelCountMs(v,:),'--','color','r')
+    % plot(wheelTimeMs,wheelCountSmth(v,:),'--','color','g')
+    % axis tight, xlim([0 trlDur]),  box off
+    % pause
+    color = colors{trialType(v)};
+    pupilTimeFrame = 1:length(pupilsize_filtered_mat(v,:));
+
+    subplot(5,4,4*4+[1 2]), hold all
+    plot(pupilTimeFrame,pupilsize_filtered_mat(v,:),'-','color',color)
+    axis tight
+    
+    subplot(1,4,3), hold all
+    plot(pupilTimeFrame,pupilsize_filtered_mat(v,:)+(v-1)*trlSclr,'-','color',color)
+    axis tight
+end
+
+
+figure(7), clf
+legendTypes = {'No Lickport, Blank'; 'No Lickport, Stimulus'; 'Lickport, Blank'; 'Lickport, Stimulus'};
+c=0;
+for u = 1:nTrialTypes
+    color = colors{u};
+    % Grouped plots
+    figure(6), subplot(5,nTrialTypes,nTrialTypes*(u-1)+[1 2]), hold on
+    typeTrials = find(trialType==u);
+    plot(pupilTimeFrame,pupilsize_filtered_mat(typeTrials,:),'-','color',color)
+    ylim([-1 1])
+    legend(legendTypes{u},'location','southeast')
+    
+    
+    figure(7), hold on
+    % Imagesc plots
+    subplot(nTrialTypes,2,(u-1)*2+1)
+    imagesc('xdata',pupilTimeFrame,'cdata',abs(pupilsize_filtered_mat(typeTrials,:)))
+    colormap parula 
+    caxis([0 1]), axis tight
+    title(legendTypes{u})
+    % PSTH Overlays
+    subplot(nTrialTypes,2,[2:2:8]), hold on
+    pupilMean = nanmean((pupilAllNorm(typeTrials,:)));
+    pupilSte = nanste((pupilAllNorm(typeTrials,:)));
+%     pupilSte(isnan(pupilSte)) = mean(isnan(pupilSte)-1)
+    patch([pupilTimeFrame fliplr(pupilTimeFrame)], [pupilMean+pupilSte fliplr(pupilMean-pupilSte)],color,'FaceAlpha',.1,'edgecolor','none')
+    plot(pupilTimeFrame,pupilMean,'-','color',color)
+    
+    
+    figure(6), subplot(1,nTrialTypes,nTrialTypes), hold all
+    for v = typeTrials
+        plot(pupilTimeFrame,pupilAllNorm(v,:)+c,'-','color',color);
+        c=c+.1;
+    end
+    c=c+1;
+end
+pupilSizes{u} = pupilSize
+hold off
+
+%% Filtered pupil plots
+
+
+figure(7), clf
+figure(6), clf
+
+rows = 1;
+cols = 4;
+
+%stim sequence
+    stimSeqRaw = stimInfo.contrastSeq;
+    if isfield(stimInfo,'wavSeq')
+        if sum(stimInfo.wavSeq~=1)>0
+            stimSeqRaw = stimInfo.wavSeq;
+        end
+    end
+
+%from autolog
+stimSeq0 = zeros(nTrls,1);
+stimSeq0(stimSeqRaw>1) = stimInfo.angleSeq(stimSeqRaw>1);
+[~,~,stimId] = unique(stimSeq0);
+stimSeq = stimId-1;
+% stimSeq = zeros(nTrls,1);
+% Trial Types
+trialType = nan(size(trls));
+trialType(lckDels==-1 & ~stimSeq) = 1; % No Lickport, Blank
+trialType(lckDels==-1 & stimSeq) = 2; % No Lickport, Stimulus
+trialType(lckDels~=-1 & ~stimSeq) = 1; % Lickport, Blank
+trialType(lckDels~=-1 & stimSeq) = 2; % Lickport, Stimulus
 nTrialTypes = 4;
 %
 colors = {'k' 'g' 'b' 'c'};
@@ -655,271 +997,149 @@ for u = 1:nTrialTypes
 end
 pupilSizes{u} = pupilSize
 hold off
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Visualize pupil session
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%
-%% Loop through to fill emptycell with pupilareaProc data
-
-pupilFile = strtrim([dFldr cFNames{iTOI}]);
-pupilInfo = imfinfo(pupilFile);
-nFrames = size(pupilInfo,1);
-pupilProc = proc.pupil.area;
-pupilareaProc = cell(1,nTrls);
-
-framebegin = 1;
-frameend = nFrames;
-
-for u = startFromTrial:nTrls
-    fSTrl = cellContainsStr(cFNames,[sTrl sprintf('%03d',u)]); %
-    iTOI = find(fSesh & fCam1 & fSTrl & fTiff);
-    pupilFile = strtrim([dFldr cFNames{iTOI}]);
-    pupilInfo = imfinfo(pupilFile);
-    nFrames = size(pupilInfo,1);
-    frameend = framebegin + nFrames - 1;
-    pupilareaProc{u} = pupilProc(framebegin:frameend);
-    framebegin = framebegin + nFrames;
-end
-
-%// pad columns with necessary number of NaN
-b = cellfun( @(c) [c(:) ; NaN(501-numel(c),1)], pupilareaProc ,'un',0 ) ;
-%// reshape to get final desired result
-pupilareaProc = b(:).';
-%pupilareaProc = smoothdata(cell2mat(pupilareaProc), 'gaussian');
-%pupilareaProc = mat2cell(pupilareaProc, 501, [1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1]);
-pupilareaProc
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Proc pupil plots
-figure(7), clf
-figure(6), clf
-
-rows = 1;
-cols = 4;
-
-%stim sequence
-    stimSeqRaw = stimInfo.contrastSeq;
-    if isfield(stimInfo,'wavSeq')
-        if sum(stimInfo.wavSeq~=1)>0
-            stimSeqRaw = stimInfo.wavSeq;
-        end
-    end
-
-%from autolog 
-stimSeq0 = zeros(nTrls,1);
-stimSeq0(stimSeqRaw>1) = stimInfo.angleSeq(stimSeqRaw>1);
-[~,~,stimId] = unique(stimSeq0);
-stimSeq = stimId-1;
-% stimSeq = zeros(nTrls,1);
-% Trial Types
-trialType = nan(size(trls));
-trialType(lckDels==-1 & ~stimSeq) = 1; % No Lickport, Blank
-trialType(lckDels==-1 & stimSeq) = 2; % No Lickport, Stimulus
-trialType(lckDels~=-1 & ~stimSeq) = 3; % Lickport, Blank
-trialType(lckDels~=-1 & stimSeq) = 4; % Lickport, Stimulus
-nTrialTypes = 4;
-%
-colors = {'k' 'g' 'b' 'c'};
-
-
-pupilSize500 = nan(nTrls,500);
-for u = 1:nTrls
-    pupilSizeproc = pupilareaProc{u};
-    
-    pupilSize500proc(u,1:length(pupilSizeproc)) = (pupilSizeproc-pupilSizeproc(1))./pupilSizeproc;
-end
-
-pupilAbsMaxproc = max(pupilSize500proc(:));
-% pupilAbsMax = max(abs(pupilSize500(:)));
-pupilAllNormproc = pupilSize500proc/pupilAbsMaxproc;
-% wheelFreqTrlNorm = wheelFreqSmth./repmat(max(abs(wheelFreqSmth)')',1,length(wheelFreqSmth));
-
-trlSclr = .1;
-for v = trls
-    % compare raw, interpolated and smoothed data
-    % subplot(rows,cols,1), cla, hold on
-    % line([0 trlDur],[0 0],'color',[.5 .5 .5],'linestyle','--')
-    % plot(wheelTimes{v},wheelCounts{v},'-','color',color)
-    % plot(wheelTimeMs,wheelCountMs(v,:),'--','color','r')
-    % plot(wheelTimeMs,wheelCountSmth(v,:),'--','color','g')
-    % axis tight, xlim([0 trlDur]),  box off
-    % pause
-    color = colors{trialType(v)};
-    pupilTimeFrame = 1:length(pupilSize500proc(v,:));
-
-    subplot(5,4,4*4+[1 2]), hold all
-    plot(pupilTimeFrame,pupilSize500proc(v,:),'-','color',color)
-    axis tight
-    
-    subplot(1,4,3), hold all
-    plot(pupilTimeFrame,pupilAllNormproc(v,:)+(v-1)*trlSclr,'-','color',color)
-    axis tight
-end
-
-
-figure(7), clf
-legendTypes = {'No Lickport, Blank'; 'No Lickport, Stimulus'; 'Lickport, Blank'; 'Lickport, Stimulus'};
-c=0;
-for u = 1:nTrialTypes
-    color = colors{u};
-    % Grouped plots
-    figure(6), subplot(5,nTrialTypes,nTrialTypes*(u-1)+[1 2]), hold on
-    typeTrials = find(trialType==u);
-    plot(pupilTimeFrame,pupilAllNormproc(typeTrials,:),'-','color',color)
-    ylim([-1 1])
-    legend(legendTypes{u},'location','southeast')
-    
-    
-    figure(7), hold on
-    % Imagesc plots
-    subplot(nTrialTypes,2,(u-1)*2+1)
-    imagesc('xdata',pupilTimeFrame,'cdata',abs(pupilAllNormproc(typeTrials,:)))
-    colormap parula
-    caxis([0 1]), axis tight
-    title(legendTypes{u})
-    % PSTH Overlays
-    subplot(nTrialTypes,2,[2:2:8]), hold on
-    pupilMeanproc = nanmean((pupilAllNormproc(typeTrials,:)));
-    pupilSteproc = nanste((pupilAllNormproc(typeTrials,:)));
-%     pupilSte(isnan(pupilSte)) = mean(isnan(pupilSte)-1)
-    patch([pupilTimeFrame fliplr(pupilTimeFrame)], [pupilMeanproc+pupilSteproc fliplr(pupilMeanproc-pupilSteproc)],color,'FaceAlpha',.1,'edgecolor','none')
-    plot(pupilTimeFrame,pupilMeanproc,'-','color',color)
-    
-    
-    figure(6), subplot(1,nTrialTypes,nTrialTypes), hold all
-    for v = typeTrials
-        plot(pupilTimeFrame,pupilAllNormproc(v,:)+c,'-','color',color);
-        c=c+.1;
-    end
-    c=c+1;
-end
-pupilareaProc{u} = pupilSizeproc
-hold off
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Additional pupil plots
-
-xs= [1:length(lickCounts)];
-%plt 1
-rows = 3;
-cols = 1;
-figure(3), clf, hold on
-
-subplot(rows,cols,1), hold all
-title('Trial total lick count in seuqnce')
-ylabel('Lick Count')
-plot(lickCounts)
-scatter(xs,lickCounts)
-lsline
-
-%plt 2
-subplot(rows,cols,2), hold all
-title('Binned lick rate in seuqnce')
-ylabel('lick rate per bin')
-plot(lickRate)
-legend('Before','During','After')
-% trialXs = repmat(xs,3,1)';
-% scatter(trialXs(:), lickRate(:))
-% lsline
-
-%plt 3
-subplot(rows,cols,3), hold all
-title('Binned lick ratio, Before:During, in seuqnce')
-xlabel('Time(s)')
-ylabel('Ratio of licks, Before:DuringLick')
-plot(lickRatio)
-scatter(1:length(lickRatio),lickRatio(:))
-lsline
-
-%% %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Proc Additional pupil plots
-
-
-
-
-pupilMeanarea_ses = cell(1,91)
-xs= [1:length(pupilMeanarea_ses)];
-for u = startFromTrial:nTrls ; 
-    pupilproc_u = pupilareaProc{u} ;
-    pupilMeanarea_ses{u} = mean(pupilproc_u)
-end
-   
-%plt 1
-rows = 2;
-cols = 1;
-figure(2), clf, hold on
-
-subplot(rows,cols,1), hold all
-title('Mean pupil area for each session')
-ylabel('Pupil area')
-plot(cell2mat(pupilMeanarea_ses))
-scatter(xs,(cell2mat(pupilMeanarea_ses)))
-lsline
-
-% %plt 2    
-subplot(rows,cols,2), hold all
-title('Pupil areas plotted for all session')
-ylabel('Pupil area')
-plot(proc.pupil.area)
-% scatter(xs,(cell2mat(pupilMeanarea_ses)))
-lsline
-
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% Clean data
-% Compute list of instantaneous dt for all sessions
-% Filter pupilareaProc based on pupilareadt
-
-pupilareadt = cell(1,91) ;
-for u = startFromTrial:nTrls ; 
-    pupilproc_u = pupilareaProc{u} ;
-    t = 1:length(pupilproc_u) ;
-    v = zeros(length(t)-1,1) ;
-    for i = 1:length(t)-1 ;
-      v(i) = (pupilproc_u(i+1)-pupilproc_u(i))/(t(i+1)-t(i)) ;
-      pupilareadt{u} = v ;
-    end
-end
-pupilareadt
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% % Filter pupilareaProc based on pupilareadt
-  
-% area_ses1_dt = single(pupilareadt{1}) ;
-% area_ses1_dt = 
-% 
-% ntrials = 91
-% length = 500
-%     for trialindex
-%         areases1(:,index) = pupilareareadt{1,trialindex}(:)
-%     end
-% end
-
-area_ses_done = cell(1,91);
-for index=1:nTrls
-    disp(index)
-    area_ses1_dt = single(pupilareadt{index}) ;
-    area_ses1_dt = [NaN;pupilareadt{index}(1:end)];
-    
-    area_ses1 = pupilareaProc{index};
-    %ses1 = table(area_ses1_dt, area_ses1);
-    % extract first row: ses1(1:501, 1)
-    isgoodframe = (-50 < area_ses1_dt & area_ses1_dt < 50) ;
-    area_ses1(~isgoodframe) = nan
-    
-    area_ses_done{index} = area_ses1
-end
-
-pupilareaProc = area_ses_done;
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Visualize pupil session 
-
-startFromTrial = 1;
-areaMatrix = zeros(501, nTrls);
+startFromTrial = 3;
 for u = startFromTrial:nTrls
     % Pupil file info
     pupilVid=pupilVids{u};
     nFrames = length(pupilVid);
     
-    areaVec = zeros(501,1)
+    % Measure pupil
+    for cnt = 1:nFrames
+        disp(num2str(cnt))
+        
+        % load and crop
+        cropImage=uint8(pupilVid(:,:,cnt));
+        % Threshold
+        skin=~im2bw(cropImage,0.05);
+        skin=bwmorph(skin,'close');
+        skin=bwmorph(skin,'open');
+        skin=bwareaopen(skin,200);
+        skin=imfill(skin,'holes');
+        % Measure pupil
+        % Select larger area
+        L=bwlabel(skin);
+        out_a=regionprops(L);
+        N=size(out_a,1);
+        if N < 1 || isempty(out_a) % Returns if no object in the image
+            solo_cara=[ ];
+            continue
+        end
+        areas=[out_a.Area];
+        [area_max pam]=max(areas);
+        % Measure pupil
+        centro=round(out_a(pam).Centroid);
+        X=centro(1);
+        Y=centro(2);
+        pupilSizeXY = out_a(pam).BoundingBox;
+        sX = pupilSizeXY(3);
+        sY = pupilSizeXY(4);
+        
+        
+        figure(1), clf
+        sgtitle(['Trial ' num2str(u) ', Frame ' num2str(cnt)])
+        
+        % display thresholding
+        %         subplot(121)
+        %         imagesc(skin);
+        %         title('Threshold')
+        % Display pupil measurements
+        subplot(122)
+        title('Measurements')
+        imagesc(cropImage*10);
+        colormap gray
+        hold on
+        rectangle('Position',out_a(pam).BoundingBox,'EdgeColor',[1 0 0],...
+            'Curvature', [1,1],'LineWidth',1)
+        plot(X,Y,'g+')
+        text(X+10,Y,['(',num2str(sX),',',num2str(sY),')'],'Color',[1 1 0])
+        hold off
+        
+        drawnow
+    end
+    %    pause
+end
+toc
+beep
+
+
+
+%% %% Visualize pupil session - New version
+
+startFromTrial = 1;
+for u = startFromTrial:nTrls
+    % Pupil file info
+    pupilVid=pupilVids{u};
+    nFrames = length(pupilVid);
+    
+    % Measure pupil
+    for cnt = 1:nFrames
+        disp(num2str(cnt))
+        
+        % load and crop
+        cropImage=uint8(pupilVid(:,:,cnt));
+        % Threshold
+        skin=~im2bw(cropImage,0.05);
+        skin=bwmorph(skin,'close');
+        skin=bwmorph(skin,'open');
+        skin=bwareaopen(skin,200);
+        skin=imfill(skin,'holes');
+        % Measure pupil
+        % Select larger area
+        L=bwlabel(skin);
+        out_a=regionprops(L);
+        N=size(out_a,1);
+        if N < 1 || isempty(out_a) % Returns if no object in the image
+            solo_cara=[ ];
+            continue
+        end
+        areas=[out_a.Area];
+        [area_max pam]=max(areas);
+        % Measure pupil
+        centro=round(out_a(pam).Centroid);
+        X=centro(1);
+        Y=centro(2);
+        pupilSizeXY = out_a(pam).BoundingBox;
+        sX = pupilSizeXY(3);
+        sY = pupilSizeXY(4);
+        
+        
+        figure(1), clf
+        sgtitle(['Trial ' num2str(u) ', Frame ' num2str(cnt)])
+        
+        % display thresholding
+        %         subplot(121)
+        %         imagesc(skin);
+        %         title('Threshold')
+        % Display pupil measurements
+        subplot(122)
+        title('Measurements')
+        imagesc(cropImage*10);
+        colormap gray
+        hold on
+        rectangle('Position',out_a(pam).BoundingBox,'EdgeColor',[1 0 0],...
+            'Curvature', [1,1],'LineWidth',1)
+        plot(X,Y,'g+')
+        text(X+10,Y,['(',num2str(sX),',',num2str(sY),')'],'Color',[1 1 0])
+        hold off
+        
+        drawnow
+    end
+    %    pause
+end
+toc
+beep
+
+startFromTrial = 1;
+areaMatrix = zeros(499, nTrls);
+for u = startFromTrial:nTrls
+    % Pupil file info
+    pupilVid=pupilVids{u};
+    nFrames = length(pupilVid);
+    
+    areaVec = zeros(499,1)
     
     % Measure pupil
     for cnt = 1:nFrames
@@ -984,108 +1204,8 @@ for u = startFromTrial:nTrls
 end
 toc
 beep   
-%% 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Visualize pupil session (filter w/ Proc)
- 
-%getPupilVideoFromProc(proc)
-startFromTrial = 1;
-xs = cell(nTrls,1);
-ys = cell(nTrls,1);
-for u = startFromTrial:nTrls
-    % Pupil file info
-    pupilVid=pupilVids{u};
-    nFrames = length(pupilVid);
-    file = proc.files{u};
-    disp("The file is:")
-    disp(file)
-    x0 = round(proc.locROI{1,5}(1) * proc.sc) ;
-    y0 = round(proc.locROI{1,5}(2) * proc.sc);
-    x1 = round(x0 + proc.locROI{1,5}(3) * proc.sc);
-    y1 = round(y0 +  proc.locROI{1,5}(4) * proc.sc);
-    disp("x0: " + x0)
-    disp("y0: " + y0)
-    disp("x1: " + x1)
-    disp("y1: " + y1)
-    
-    mov = VideoReader(file);
-    nFrames = mov.NumberOfFrames;
-    %end ethan code
-    
-    
-    % Measure pupil
-    for cnt = 1:nFrames
 
-        disp(num2str(cnt))
-         % load and crop
-        cropImage=uint8(pupilVid(:,:,cnt));
-        % Threshold
-        skin=~im2bw(cropImage,0.05);
-        skin=bwmorph(skin,'close');
-        skin=bwmorph(skin,'open');
-        skin=bwareaopen(skin,200);
-        skin=imfill(skin,'holes');
-        % Measure
-        
-        % Select larger area
-        L=bwlabel(skin);
-        out_a=regionprops(L);
-        N=size(out_a,1);
-        if N < 1 || isempty(out_a) % Returns if no object in the image
-            solo_cara=[ ];
-            continue
-        end   
-        areas=[out_a.Area];
-        [area_max pam]=max(areas);
-        % Measure pupil
-        centro=out_a(pam).Centroid;%round(out_a(pam).Centroid);
-        X=centro(1)-1;
-        Y=centro(2)-1;
-        pupilSizeXY = out_a(pam).BoundingBox
-        sX = pupilSizeXY(3);
-        sY = pupilSizeXY(4);
-        
-        % start ethan code for bringning in proc pupil data to plot ellipse
-        % remember to account for the nframes later
-        centerOfPupilX = proc.pupil.com(cnt,1);
-        centerOfPupilY = proc.pupil.com(cnt,2); 
-        
-        
-        figure(1), clf
-        sgtitle(['Trial ' num2str(u) ', Frame ' num2str(cnt)])
-        
-%         display thresholding
-%                 subplot(121)
-%                 imagesc(skin);
-%                 title('Threshold')
-%         Display pupil measurements
-%         subplot(122)
-        title('Measurements')
-        imagesc(cropImage*10);
-        colormap gray
-        hold on
-        temp = pupilareaProc(1,  int8(u));
-        temp2 = cellfun(@isnan,temp, 'UniformOutput', false)
-        
-        if temp2{1,1}(cnt) == 0
-            rectangle('Position',out_a(pam).BoundingBox,'EdgeColor',[1 0 0],'Curvature', [1,1],'LineWidth',1)
-        end
-        %ethan plotting center of pupil from proc
-        %plot(centerOfPupilX, centerOfPupilY,'b+')
-        % end ethan plotting
-        plot(X,Y,'g+')
-        text(X+10,Y,['(',num2str(sX),',',num2str(sY),')'],'Color',[1 1 0])
-        hold off
-        
-        %save X and Y
-        xs{u}(cnt) = X;
-        ys{u}(cnt) = Y; 
-        pause
-    end
-end
-toc
-beep   
-
+save([dFldr 'pupilData.mat'],'pupilSizes','pupilVids','-v7.3')
 
 %% troubleshooting
 figure, hold all
