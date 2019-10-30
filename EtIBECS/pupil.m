@@ -22,9 +22,7 @@ function pupil(inputArg1,inputArg2)
     tic
     parfor u = 1:nTrls
         [pupilSizeTrialU, pupilVids] = pupilAnalysis(dFldr, u, iTOI, cFNames, minX, maxX, minY, maxY);
-        pupilSizes{u} = pupilSizeTrialU;
-        % Optional to draw figures
-        visualizePupilAnalysis(minX, maxX, minY, maxY);
+        pupilSizes{u} = pupilSizeTrialU; 
     end
     toc
     
