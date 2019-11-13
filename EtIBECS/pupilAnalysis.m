@@ -1,6 +1,8 @@
 function [pupilSizes, pupilVids] = pupilAnalysis(dFldr, u, iTOI, cFNames, minX, maxX, minY, maxY)
 %PUPILANALYSIS Summary of this function goes here
 %   Detailed explanation goes here
+    folderName = sprintf("Trial_%d", u);
+    mkdir(dFldr, folderName);
     disp(['Pupil Analysis Trial ', num2str(u)])
     if ~isempty(iTOI)
         % Pupil file info
@@ -10,7 +12,8 @@ function [pupilSizes, pupilVids] = pupilAnalysis(dFldr, u, iTOI, cFNames, minX, 
         pupilSizeproc = nan(nFrames,1);
         pupilVid = nan(maxY-minY+1,maxX-minX+1,nFrames);
         % Measure pupil
-        area_vector = zeros(1,nFrames)
+        area_vector = zeros(1,nFrames);
+        
         for cnt = 1:nFrames
             %load and crop
             fullImage = imread(pupilFile,cnt);
@@ -46,7 +49,7 @@ function [pupilSizes, pupilVids] = pupilAnalysis(dFldr, u, iTOI, cFNames, minX, 
             showAllPlot = true;
             showMeasure = true;
             % Visualization Stuff
-            visualizePupilAnalysis(showAllPlot, showMeasure, u, cnt, fullImage, minX, maxX, minY, maxY, cropImage, skin, pam, X, Y, sX, sY, out_a);
+            visualizePupilAnalysis(folderName, dFldr, showAllPlot, showMeasure, u, cnt, fullImage, minX, maxX, minY, maxY, cropImage, skin, pam, X, Y, sX, sY, out_a);
         end
         pupilSizes{u} = pupilSizeproc;
         pupilVids{u} = pupilVid;

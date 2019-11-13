@@ -16,10 +16,14 @@ function [matrix] = convertCellArraytoMat(array)
     a = matrix{1};
     a = a';
     
-    disp(('this is b:')
     b = cellfun( @(c) [c(:) ; NaN(longest-numel(c),1)], matrix,'un',0);
-    disp('this is d: (NaN initialization)')
-    d = nan(length(b{1}),length(b))
+    d = nan(length(b{1}),length(b));
+    
+    for j = 1:size(d,1)
+        for k = 1:size(d,2)
+            d(j,k) = b{j}{k}
+        end
+    end
 
     for k = 1:length(b)
        d(:,k) = {b{k}};

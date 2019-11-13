@@ -16,13 +16,15 @@ function pupil(inputArg1,inputArg2)
     iTOI = find(fSesh & fCam1 & fSTrl & fTiff);
         
     % Call Cropping function
-    [minX, maxX, minY, maxY] = selectCroppedRegion(cFNames, iTOI, dFldr);
+    [minX, maxX, minY, maxY] = selectCroppedRegionPupilCenterMethod(cFNames, iTOI, dFldr);
         
     % Call Pupil Analysis function on each trial
     tic
-    parfor u = 1:nTrls
+    for u = 1:nTrls
         [pupilSizeTrialU, pupilVids] = pupilAnalysis(dFldr, u, iTOI, cFNames, minX, maxX, minY, maxY);
-        pupilSizes{u} = pupilSizeTrialU; 
+        pupilSizes{u} = pupilSizeTrialU;
+        disp("Done with trial");
+        disp(u);
     end
     toc
     
