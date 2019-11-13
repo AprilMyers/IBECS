@@ -1,4 +1,4 @@
-function visualizePupilAnalysis(showAllPlot, showMeasure, u, cnt, fullImage, minX, maxX, minY, maxY, cropImage, skin, pam, X, Y, sX, sY)        
+function visualizePupilAnalysis(showAllPlot, showMeasure, u, cnt, fullImage, minX, maxX, minY, maxY, cropImage, skin, pam, X, Y, sX, sY, out_a)        
     %Visualization Stuff
     if showAllPlot==true | showMeasure==true
     figure(1), clf

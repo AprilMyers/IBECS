@@ -1,4 +1,4 @@
-function [minX,maxX,minY,maxY] = selectCroppedRegion(cFNames, iTOI)
+function [minX,maxX,minY,maxY] = selectCroppedRegion(cFNames, iTOI, dFldr)
 %SELECTCROPPEDREGION Summary of this function goes here
 %   Detailed explanation goes here
 

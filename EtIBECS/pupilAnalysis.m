@@ -43,9 +43,10 @@ function [pupilSizes, pupilVids] = pupilAnalysis(dFldr, u, iTOI, cFNames, minX, 
             % save data
             pupilSizeproc(cnt) = mean([sX,sY]);
             pupilVid(:,:,cnt) = uint8(cropImage);
-            
+            showAllPlot = true;
+            showMeasure = true;
             % Visualization Stuff
-            visualizePupilAnalysis(showAllPlot, showMeasure, u, cnt, fullImage, minX, maxX, minY, maxY, cropImage, skin, pam, X, Y, sX, sY);
+            visualizePupilAnalysis(showAllPlot, showMeasure, u, cnt, fullImage, minX, maxX, minY, maxY, cropImage, skin, pam, X, Y, sX, sY, out_a);
         end
         pupilSizes{u} = pupilSizeproc;
         pupilVids{u} = pupilVid;
@@ -55,5 +56,5 @@ function [pupilSizes, pupilVids] = pupilAnalysis(dFldr, u, iTOI, cFNames, minX, 
     %     figure(2), hold all
     %     plot(pupilSize)
     %     pause
-    save([dFldr 'pupilData.mat'],'pupilSizes','pupilVids','-v7.3')
+%     save([dFldr 'pupilData.mat'],'pupilSizes','pupilVids','-v7.3')
 end

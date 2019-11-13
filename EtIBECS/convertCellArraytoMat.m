@@ -15,13 +15,14 @@ function [matrix] = convertCellArraytoMat(array)
     cellmax = longest;
     a = matrix{1};
     a = a';
-
+    
+    disp(('this is b:')
     b = cellfun( @(c) [c(:) ; NaN(longest-numel(c),1)], matrix,'un',0);
-
-    d = nan(length(b{1}),length(b));
+    disp('this is d: (NaN initialization)')
+    d = nan(length(b{1}),length(b))
 
     for k = 1:length(b)
-        d(:,k) = b{k};
+       d(:,k) = {b{k}};
     % a = vertcat(a, b{k}');
     %     size(a)
     end

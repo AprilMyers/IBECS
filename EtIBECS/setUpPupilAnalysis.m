@@ -45,7 +45,7 @@ function [nTrls, dFldr, cFNames, aTrl, sTrl, nCam1, nCam2, nLick, nMWhl,...
     fTxt = cellContainsStr(cFNames,'txt'); % file type
     fTiff = cellContainsStr(cFNames,'tif');
     
-    fSTrl = cellContainsStr(cFNames,[sTrl sprintf('%03d',u)]);
+    fSTrl = cellContainsStr(cFNames,[sTrl sprintf('%03d',1)]);
     
     %seshTitle = cFNames{10}(1:find('_'==cFNames{10},1,'first')-1);
     seshTitle = "This is the seshTitle";

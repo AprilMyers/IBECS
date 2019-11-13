@@ -16,7 +16,7 @@ function pupil(inputArg1,inputArg2)
     iTOI = find(fSesh & fCam1 & fSTrl & fTiff);
         
     % Call Cropping function
-    [minX, maxX, minY, maxY] = selectCroppedRegion(cFNames, iTOI);
+    [minX, maxX, minY, maxY] = selectCroppedRegion(cFNames, iTOI, dFldr);
         
     % Call Pupil Analysis function on each trial
     tic
@@ -45,4 +45,3 @@ function pupil(inputArg1,inputArg2)
     [pupilsize_interp_mat] = convertCellArraytoMat(pupilsize_filtered);
     
 end
-
