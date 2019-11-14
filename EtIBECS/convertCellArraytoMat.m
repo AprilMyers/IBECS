@@ -25,8 +25,8 @@ function [matrix] = convertCellArraytoMat(array)
         end
     end
 
-    for k = 1:length(b)
-       d(:,k) = {b{k}};
+    %for k = 1:length(b)
+    %  d(:,k) = {b{k}};
     % a = vertcat(a, b{k}');
     %     size(a)
     end
