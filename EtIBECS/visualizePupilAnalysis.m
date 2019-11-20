@@ -7,7 +7,7 @@ function visualizePupilAnalysis(folderName, dFldr, showAllPlot, showMeasure, u, 
     if showAllPlot==true
         % Show full image
         subplot(221),
-        axis(image)
+        %axis(image)
         imagesc(fullImage), hold on
         xs = [minX maxX maxX minX minX];
         ys = [minY minY maxY maxY minY];
@@ -17,12 +17,14 @@ function visualizePupilAnalysis(folderName, dFldr, showAllPlot, showMeasure, u, 
         subplot(223);
         imagesc(cropImage*2);
         title('Cropped');
+        axis square
     end
     if showMeasure==true
         % display thresholding
         subplot(222);
         imagesc(skin);
         title('Threshold');
+        axis square
         % Display pupil measurements
         subplot(224);
         title('Measurements');
@@ -33,9 +35,11 @@ function visualizePupilAnalysis(folderName, dFldr, showAllPlot, showMeasure, u, 
             'Curvature', [1,1],'LineWidth',1);
         plot(X,Y,'g+');
         text(X+10,Y,['(',num2str(sX),',',num2str(sY),')'],'Color',[1 1 0]);
+        axis square
         hold off;
     end
     drawnow;
+    axis square
     pngFileName = sprintf('FIG_%d.png', cnt);
     fullFileName = fullfile(dFldr, folderName, pngFileName);
     

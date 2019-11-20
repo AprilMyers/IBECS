@@ -15,10 +15,10 @@ function [minX,maxX,minY,maxY] = selectCroppedRegionPupilCenterMethod(cFNames, i
         X = round(X);
         Y = round(Y);
         
-        minX = X - 50;
-        maxX = X + 50;
-        minY = Y - 50;
-        maxY = Y + 50;
+        minX = X - 40;
+        maxX = X + 40;
+        minY = Y - 40;
+        maxY = Y + 40;
 
         % scatter([minX minX maxX maxX], [maxY minY minY maxY],'r');
         xs = [minX maxX maxX minX minX];
