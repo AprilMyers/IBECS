@@ -25,25 +25,21 @@ function [matrix] = convertCellArraytoMat(array)
         display(b{1})
     catch
         display('tried b{1}; failed')
-    end
         
     try 
         display(b{1}{1})
     catch
         display('tried b{1}{1}; failed')
-    end
         
     try 
         display(b{2}{1})
     catch
         display('tried b{2}{1}; failed')
-    end    
-    
+        
     try 
-        display(b(1))
+        display(b{1})
     catch
-        display('tried b(1); failed')
-    end
+        display('tried b{1}; failed')
     
         
   
