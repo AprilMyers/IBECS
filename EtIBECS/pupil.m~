@@ -16,25 +16,35 @@ function pupil(inputArg1,inputArg2)
     iTOI = find(fSesh & fCam1 & fSTrl & fTiff);
         
     % Call Cropping function
-    [minX, maxX, minY, maxY] = selectCroppedRegion(cFNames, iTOI);
+    [minX, maxX, minY, maxY] = selectCroppedRegionPupilCenterMethod(cFNames, iTOI, dFldr);
         
     % Call Pupil Analysis function on each trial
     tic
-    parfor u = 1:nTrls
+    pupilSizes = {};
+    for u = 1:1 %1:nTrls
         [pupilSizeTrialU, pupilVids] = pupilAnalysis(dFldr, u, iTOI, cFNames, minX, maxX, minY, maxY);
         pupilSizes{u} = pupilSizeTrialU;
-        % Optional to draw figures
-        visualizePupilAnalysis(minX, maxX, minY, maxY);
+        disp("Done with trial");
+        disp(u);
     end
     toc
     
     % Converts the cell array to a Matrix of all values and use Nans to pad
-    [cellmax, a, pupilSizesMat] = convertCellArraytoMat(pupilSizes);
+    [pupilSizesMat] = convertCellArraytoMat(pupilSizes);
     
     % Create the dt matrix
     [pupilSizedt] = creating_dt(pupilSizes);
     
-    % Filter the 
+    % Filter the dt array
+    [pupilareaProc, pupilsize_filtered] = filterMatrix(pupilSizes, pupilSizedt);
+    
+    % Converts the cell array to a matrix of all values and use Nans to pad
+    [pupilsize_filtered_mat] = convertCellArraytoMat(pupilsize_filtered);
+    
+    % Interpolation
+    [pupilsize_filtered] = interpolation(pupilsize_filtered);
+    
+     % Converts the cell array to a matrix of all values and use Nans to pad
+    [pupilsize_interp_mat] = convertCellArraytoMat(pupilsize_filtered);
     
 end
-

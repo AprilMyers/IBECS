@@ -20,7 +20,8 @@ function pupil(inputArg1,inputArg2)
         
     % Call Pupil Analysis function on each trial
     tic
-    for u = 1:nTrls
+    pupilSizes = {};
+    for u = 1:1 %1:nTrls
         [pupilSizeTrialU, pupilVids] = pupilAnalysis(dFldr, u, iTOI, cFNames, minX, maxX, minY, maxY);
         pupilSizes{u} = pupilSizeTrialU;
         disp("Done with trial");
