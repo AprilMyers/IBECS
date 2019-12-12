@@ -1,49 +1,154 @@
-function pupil(inputArg1,inputArg2)
-%PUPIL Summary of this function goes here
-%   Detailed explanation goes here
+% function pupil(inputArg1,inputArg2)
+% %PUPIL Summary of this function goes here
+% %   Detailed explanation goes here
+% 
+%     % Call Setup and File Read In Function
+%     [nTrls, dFldr, cFNames, aTrl, sTrl, nCam1, nCam2, nLick, nMWhl,... 
+%         nTrig, nValv, nShck, nMove, nProt, nStim, fSesh, ... 
+%         fCam1, fCam2, fLick, fMWhl, fTrig, fValv, fShck, ...
+%         fMove, fProt, fStim, fTxt, fTiff, fSTrl,seshTitle] = setUpPupilAnalysis();
+%     
+%     %Ryans Figure Settings to Display Figures
+%     RyansFigureSettings;
+%     
+%     
+%     % Filter files based on name attributes
+%     iTOI = find(fSesh & fCam1 & fSTrl & fTiff);
+%         
+%     % Call Cropping function
+%     [minX, maxX, minY, maxY] = selectCroppedRegionPupilCenterMethod(cFNames, iTOI, dFldr);
+%         
+%     % Call Pupil Analysis function on each trial
+%     tic
+%     pupilSizes = {};
+%     for u = 1:1 %1:nTrls
+%         [pupilSizeTrialU, pupilVids] = pupilAnalysis(dFldr, u, iTOI, cFNames, minX, maxX, minY, maxY);
+%         pupilSizes{u} = pupilSizeTrialU;
+%         disp("Done with trial");
+%         disp(u);
+%     end
+%     toc
+%     
+%     % Converts the cell array to a Matrix of all values and use Nans to pad
+%     disp("The dimension of pupilSizes is: ")
+%     pupilSizes
+%     
+% %     [pupilSizesMat] = convertCellArraytoMat(pupilSizes);
+% %     
+% %     % Create the dt matrix
+% %     [pupilSizedt] = creating_dt(pupilSizes);
+% %     
+% %     % Filter the dt array
+% %     [pupilareaProc, pupilsize_filtered] = filterMatrix(pupilSizes, pupilSizedt);
+% %     
+% %     % Converts the cell array to a matrix of all values and use Nans to pad
+% %     [pupilsize_filtered_mat] = convertCellArraytoMat(pupilsize_filtered);
+% %     
+% %     % Interpolation
+% %     [pupilsize_filtered] = interpolation(pupilsize_filtered);
+% %     
+% %      % Converts the cell array to a matrix of all values and use Nans to pad
+% %     [pupilsize_interp_mat] = convertCellArraytoMat(pupilsize_filtered);
+%     
+% end
 
+
+
+function [data] = pupil()
+%PUPIL: Outputs a structure containing 4 fields
+% 1) Area
+% 2) MajorAxisLength 
+% 3) xPosition
+% 4) yPosition
+    % Decide whether you want to create plots
+    createPlot = input("Do you want to create plots? 1 to create, 0 to not create");
+    % Decide whether you want to display plots
+    displayPlot = input("Would you like to display plots? 1 to display, 0 to not display");
+    
+    if displayPlot == 0
+        displayPlot = "off";
+    end
+    
     % Call Setup and File Read In Function
+    disp("Started Setup");
     [nTrls, dFldr, cFNames, aTrl, sTrl, nCam1, nCam2, nLick, nMWhl,... 
         nTrig, nValv, nShck, nMove, nProt, nStim, fSesh, ... 
         fCam1, fCam2, fLick, fMWhl, fTrig, fValv, fShck, ...
         fMove, fProt, fStim, fTxt, fTiff, fSTrl,seshTitle] = setUpPupilAnalysis();
+    disp("Finished Setup");
     
     %Ryans Figure Settings to Display Figures
     RyansFigureSettings;
     
     
-    % Filter files based on name attributes
+    % Filter files based on name attributes, tifFiles holds the tif files used to generate the pupil analysis
     iTOI = find(fSesh & fCam1 & fSTrl & fTiff);
+    
+    tifFiles = cell(sum(fTiff), 1);
+    count = 1;
+    for k = 1:size(fTiff)
+        if fTiff(k) == 1
+            tifFiles{count} = cFNames{k};
+            count = count + 1;
+        end
+    end
         
     % Call Cropping function
+    disp("Started Cropping");
     [minX, maxX, minY, maxY] = selectCroppedRegionPupilCenterMethod(cFNames, iTOI, dFldr);
-        
+    disp("Finished Cropping");
     % Call Pupil Analysis function on each trial
     tic
-    for u = 1:nTrls
-        [pupilSizeTrialU, pupilVids] = pupilAnalysis(dFldr, u, iTOI, cFNames, minX, maxX, minY, maxY);
-        pupilSizes{u} = pupilSizeTrialU;
-        disp("Done with trial". u);
-        disp(u);
+    
+    
+    %for debugging%
+    nTrls = 1;
+    %end debugging%
+    
+    dataForAllTrialsArray = cell(nTrls, 1);
+    minFrames = 10000000;
+    for trialNumber = 1:nTrls
+        disp("Started pupilAnalysis for trial:");
+        disp(trialNumber);
+        
+%         [dataTrialArray] = pupilAnalysis(dFldr, tifFiles, trialNumber, minX, maxX, minY, maxY);
+        [dataTrialArray, nFrames] = pupilAnalysis(displayPlot, createPlot, dFldr, tifFiles, trialNumber, minX, maxX, minY, maxY);
+        dataForAllTrialsArray(trialNumber, 1) = {dataTrialArray};
+        
+        if nFrames < minFrames
+            minFrames = nFrames;
+        end
+        
+        disp("Done with trial:");
+        disp(trialNumber);
+        disp("Corresponding file:");
+        disp(strtrim(tifFiles{trialNumber}));
     end
     toc
     
-    % Converts the cell array to a Matrix of all values and use Nans to pad
-    [pupilSizesMat] = convertCellArraytoMat(pupilSizes);
+% Convert dataTrialArray into struct with the following fields:
+    % --> Areas (Trial x Frame Matrix of Areas)
+    % --> Centers (Trial X Frame Matrix of Centers)
+    % --> MajorAxisLength (Trial x Frame Matrix of MajorAxisLength)
+    % --> MinorAxisLength (Trial X Frame Matrix of MinorAxisLength)
+    % --> BoundingBox (Trial x Frame Matrix of BoundingBox)
     
-    % Create the dt matrix
-    [pupilSizedt] = creating_dt(pupilSizes);
+    disp("Started converting to correct output format");
+    data = convertToCorrectOutputFormat(dataForAllTrialsArray, minFrames, nTrls);
+   
+    disp("Started converting from cell array of areas to matrix of areas");
+    data.AreasMatrix = convertCellArrayToMat(data.AreasArray);
     
-    % Filter the dt array
-    [pupilareaProc, pupilsize_filtered] = filterMatrix(pupilSizes, pupilSizedt);
+    disp("Started calculating dtAreas matrix");
+    data.dtAreasMatrix = creatingDtMatrix(data.AreasMatrix);
     
-    % Converts the cell array to a matrix of all values and use Nans to pad
-    [pupilsize_filtered_mat] = convertCellArraytoMat(pupilsize_filtered);
+    disp("Started filtering the dtAreas matrix");
+    threshold = 5; %Needs to be adjusted
+    data.dtAreasMatrixFiltered = filterDtMatrix(data.dtAreasMatrix, threshold);
     
-    % Interpolation
-    [pupilsize_filtered] = interpolation(pupilsize_filtered);
+    disp("Started calculating dtAreasInterpolated matrix");
+    data.dtAreasMatrixFilteredInterpolated = interpolateDtMatrix(data.dtAreasMatrixFiltered);
     
-     % Converts the cell array to a matrix of all values and use Nans to pad
-    [pupilsize_interp_mat] = convertCellArraytoMat(pupilsize_filtered);
-    
+    save 
+
 end

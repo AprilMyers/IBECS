@@ -33,26 +33,12 @@ function [cropImage, dataTrialArray, nFrames] = pupilAnalysis(howManyPlot, displ
         % Load and crop the image from the current frame
         fullImage = imread(pupilFile,frameNumber);
         cropImage=fullImage([minY:maxY], [minX:maxX]);
-        
+        cropImage=rgb2gray(cropImage);
         
         
         % Apply greyscale/masking procedures on the cropped image to
         % isolate the single pupil
-%         skin =~ imbinarize(cropImage,0.05);
-        
-        
-%         figure(1), hold on
-        sizeOfData = size(cropImage)
-        filteredImage = zeros(sizeOfData);
-        for k = 1:sizeOfData(1)
-            for j = 1:sizeOfData(2)
-                if cropImage(k,j) < 8
-                    filteredImage(k,j) = 1;
-                end
-            end
-        end
-        skin= filteredImage;
-        
+        skin =~ imbinarize(cropImage,0.05);
         skin = bwmorph(skin,'close');
         skin = bwmorph(skin,'open');
         skin = bwareaopen(skin,200);
@@ -61,12 +47,15 @@ function [cropImage, dataTrialArray, nFrames] = pupilAnalysis(howManyPlot, displ
 
         
         figure(1), hold on
-        imshow(skin, 'InitialMagnification', 'fit');
-        hold off
+        sizeOfData = size(cropImage)
+        for k = 1:sizeOfData(1)
+            for j = 1:sizeOfData(2)
+                if cropImage(k,j)
+            end
+        end
+        imshow(cropImage,'InitialMagnification','fit');
         
-%         imshow(cropImage,'InitialMagnification','fit');
-%         
-        
+        hold of1f
         
         % To get the properties of the pupilRegion call regionprops
         % This returns an object called pupilProperties which has the
@@ -87,7 +76,7 @@ function [cropImage, dataTrialArray, nFrames] = pupilAnalysis(howManyPlot, displ
             continue
         end
         
-        dataTrialArray(frameNumber,1) = {pupilProperties(2)};
+        dataTrialArray(frameNumber,1) = {pupilProperties(1)};
         
         % Visualization Protocol
         disp(['Pupil Analysis Trial & Frame ', num2str(trialNumber), ' ', num2str(frameNumber)])

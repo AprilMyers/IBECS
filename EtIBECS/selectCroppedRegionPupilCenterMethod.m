@@ -1,8 +1,9 @@
-function [minX,maxX,minY,maxY] = selectCroppedRegionPupilCenterMethod(cFNames, iTOI, dFldr)
+function [minX,maxX,minY,maxY] = selectCroppedRegionPupilCenterMethod(tifFiles, dFldr)
 %SELECTCROPPEDREGION Summary of this function goes here
 %   Detailed explanation goes here
 
-    pupilFile = strtrim([dFldr cFNames{iTOI}]);
+    pupilFile = strtrim([dFldr tifFiles{1}]);
+    disp(tifFiles{1});
     fullImage = imread(pupilFile, 1);
     
     
@@ -10,7 +11,8 @@ function [minX,maxX,minY,maxY] = selectCroppedRegionPupilCenterMethod(cFNames, i
     while acceptCrop==0
         beep
         imshow(fullImage);
-        [X, Y] = ginput(1), hold on
+        [X, Y] = ginputWhite(1);
+        hold on;
 
         X = round(X);
         Y = round(Y);
@@ -26,12 +28,13 @@ function [minX,maxX,minY,maxY] = selectCroppedRegionPupilCenterMethod(cFNames, i
         figure
         plot(xs, ys,'r','linestyle','-');
         cropImage = fullImage([minY:maxY],[minX:maxX]);
-        title('full')
-        imagesc(cropImage)
+        title('full');
+        imagesc(cropImage);
         % caxis([0 5])
         % colormap hot
-        title('cropped')
+        title('cropped');
         beep
-        acceptCrop = input('Accept Crop? Enter 1 to accept or 0 to reject: ')
+        acceptCrop = input('Accept Crop? Enter 1 to accept or 0 to reject: ');
     end
+    close all;
 end

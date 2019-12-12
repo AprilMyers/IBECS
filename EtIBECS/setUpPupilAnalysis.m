@@ -59,7 +59,12 @@ function [nTrls, dFldr, cFNames, aTrl, sTrl, nCam1, nCam2, nLick, nMWhl,...
     stimInfo = load(fNm);
     
     % number of trials
-    nTrls = str2num(protocol.TrialName{1});
+%     nTrls = str2num(protocol.TrialName{1});
+     % Calculating nTrls using for loop to count the number of tif files
+     
+%      nTrls = sum(fTiff);
+%      disp(["SETUP's value for nTrls " nTrls])
+    nTrls = sum(fTiff);
     nTrlsCheck = length(protocol.TrialName)-1;
     if nTrls~=nTrlsCheck
         warning('Mismatched number of trials in Protocol')
