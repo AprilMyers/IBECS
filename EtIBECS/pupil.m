@@ -1,4 +1,4 @@
-function [cropImage, data] = pupil()
+function [o2, p2, r2, c2, CH2, dataForAllTrialsArray, dFldr, cropImage] = pupil()
 %PUPIL: Outputs a structure containing 4 fields
 % 1) Area
 % 2) MajorAxisLength 
@@ -59,24 +59,24 @@ function [cropImage, data] = pupil()
         
     % Call Cropping function
     disp("Started Cropping");
-    [minX, maxX, minY, maxY] = selectCroppedRegionPupilCenterMethod(tifFiles, dFldr);
+    [minX, maxX, minY, maxY] = selectCroppedRegion(tifFiles, dFldr);
     disp("Finished Cropping");
     % Call Pupil Analysis function on each trial
     tic
     
     
     %for debugging%
-    nTrls = 1;
+    nTrls = 2;
     %end debugging%
     
     dataForAllTrialsArray = cell(nTrls, 1);
     minFrames = 10000000;
-    for trialNumber = 1:nTrls
+    for trialNumber = 2:nTrls
         disp("Started pupilAnalysis for trial:");
         disp(trialNumber);
         
 %         [dataTrialArray] = pupilAnalysis(dFldr, tifFiles, trialNumber, minX, maxX, minY, maxY);
-        [cropImage, dataTrialArray, nFrames] = pupilAnalysis(howManyPlot, displayPlot, createPlot, dFldr, tifFiles, trialNumber, minX, maxX, minY, maxY);
+        [o2, p2, r2, c2, CH2, cropImage, dataTrialArray, nFrames] = pupilAnalysis(howManyPlot, displayPlot, createPlot, dFldr, tifFiles, trialNumber, minX, maxX, minY, maxY);
         dataForAllTrialsArray(trialNumber, 1) = {dataTrialArray};
         
         if nFrames < minFrames
@@ -97,22 +97,22 @@ function [cropImage, data] = pupil()
     % --> MinorAxisLength (Trial X Frame Matrix of MinorAxisLength)
     % --> BoundingBox (Trial x Frame Matrix of BoundingBox)
     
-    disp("Started converting to correct output format");
-    data = convertToCorrectOutputFormat(dataForAllTrialsArray, minFrames, nTrls);
-   
-    disp("Started converting from cell array of areas to matrix of areas");
-    data.AreasMatrix = convertCellArrayToMat(data.AreasArray);
-    
-    disp("Started calculating dtAreas matrix");
-    data.dtAreasMatrix = creatingDtMatrix(data.AreasMatrix);
-    
-    disp("Started filtering the dtAreas matrix");
-    threshold = std(data.dtAreasMatrix); %Needs to be adjusted, can be adjusted later
-    data.dtAreasMatrixFiltered = filterDtMatrix(data.dtAreasMatrix, threshold);
-    
-    disp("Started calculating dtAreasInterpolated matrix");
-    data.dtAreasMatrixFilteredInterpolated = interpolateDtMatrix(data.dtAreasMatrixFiltered);
-    
-    save('all_data.mat','-struct','data') %saves to pupilAnalysisNew folder
+%     disp("Started converting to correct output format");
+%     data = convertToCorrectOutputFormat(dataForAllTrialsArray, minFrames, nTrls);
+%    
+%     disp("Started converting from cell array of areas to matrix of areas");
+%     data.AreasMatrix = convertCellArrayToMat(data.AreasArray);
+%     
+%     disp("Started calculating dtAreas matrix");
+%     data.dtAreasMatrix = creatingDtMatrix(data.AreasMatrix);
+%     
+%     disp("Started filtering the dtAreas matrix");
+%     threshold = std(data.dtAreasMatrix); %Needs to be adjusted, can be adjusted later
+%     data.dtAreasMatrixFiltered = filterDtMatrix(data.dtAreasMatrix, threshold);
+%     
+%     disp("Started calculating dtAreasInterpolated matrix");
+%     data.dtAreasMatrixFilteredInterpolated = interpolateDtMatrix(data.dtAreasMatrixFiltered);
+%     
+%     save('all_data.mat','-struct','data') %saves to pupilAnalysisNew folder
 
 end

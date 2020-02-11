@@ -1,4 +1,4 @@
-function [cropImage, dataTrialArray, nFrames] = pupilAnalysis(howManyPlot, displayPlot, createPlot, dFldr, tifFiles, trialNumber, minX, maxX, minY, maxY)
+function [o2, p2, r2, c2, CH2, cropImage, dataTrialArray, nFrames] = pupilAnalysis(howManyPlot, displayPlot, createPlot, dFldr, tifFiles, trialNumber, minX, maxX, minY, maxY)
 %PUPILANALYSIS Summary of this function goes here
 %   Detailed explanation goes here
 %     mkdir(dFldr, folderName);
@@ -35,14 +35,8 @@ function [cropImage, dataTrialArray, nFrames] = pupilAnalysis(howManyPlot, displ
         cropImage=fullImage([minY:maxY], [minX:maxX]);
         
         
-        
-        % Apply greyscale/masking procedures on the cropped image to
-        % isolate the single pupil
-%         skin =~ imbinarize(cropImage,0.05);
-        
-        
-%         figure(1), hold on
-        sizeOfData = size(cropImage)
+
+        sizeOfData = size(cropImage);
         filteredImage = zeros(sizeOfData);
         for k = 1:sizeOfData(1)
             for j = 1:sizeOfData(2)
@@ -51,18 +45,107 @@ function [cropImage, dataTrialArray, nFrames] = pupilAnalysis(howManyPlot, displ
                 end
             end
         end
-        skin= filteredImage;
+        skin1 = filteredImage;
         
-        skin = bwmorph(skin,'close');
-        skin = bwmorph(skin,'open');
-        skin = bwareaopen(skin,200);
-        skin = imfill(skin,'holes');
-        pupilRegion = skin;
+        skin2 = bwmorph(skin1,'close');
+        skin3 = bwmorph(skin2,'open');
+        skin4 = bwareaopen(skin3,200);
+        skin_test = bwareaopen(skin3,100);
+        
+%         skin5 = imfill(skin4,'holes');
+%         skin6 = bwconvhull(skin5);
+%         skin7 = bwconvhull(skin6,'objects');
+%         pupilRegion = skin7;
+%         [r,c] = find(pupilRegion);
+%         CH = convhull(r,c);
+        
+%         % skin 4
+%         p1 = bwconvhull(skin4);
+%         o1 = bwconvhull(p1,'objects');
+%         [r1,c1] = find(o1);
+%         CH1 = convhull(r1,c1);
+        
+        % skin_test (optimal)
+        p2 = bwconvhull(skin_test);
+        o2 = bwconvhull(p2,'objects');
+        [r2,c2] = find(o2);
+        CH2 = convhull(r2,c2);
 
+        % figure(2), hold on
+        numPoints = size(CH2, 1);
+        points = zeros(size(CH2,1), 2);
+        for i = 1:size(CH2,1)
+            points(i,1) = c2(CH2(i));
+            points(i,2) = r2(CH2(i));
+        end
+
+        t = (1:numPoints)';
+        X = ones(numPoints,3);
+        X(:,2) = cos((2*pi)/numPoints*t);
+        X(:,3) = sin((2*pi)/numPoints*t);
+        y = points(:, 1);
+        y = y(:);
+        beta = X\y;
+        yhat = beta(1)+beta(2)*cos((2*pi)/numPoints*t)+beta(3)*sin((2*pi)/numPoints*t);
+%         plot(t,y,'b');
+        hold on
+%         plot(t,yhat,'r','linewidth',2);
+        sin_approximation_x = yhat;
+
+
+        t = (1:numPoints)';
+        X = ones(numPoints,3);
+        X(:,2) = cos((2*pi)/numPoints*t);
+        X(:,3) = sin((2*pi)/numPoints*t);
+        y = points(:, 2);
+        y = y(:);
+        beta = X\y;
+        yhat = beta(1)+beta(2)*cos((2*pi)/numPoints*t)+beta(3)*sin((2*pi)/numPoints*t);
+%         plot(t,y,'b');
+        hold on
+%         plot(t,yhat,'r','linewidth',2);
+        
+        sin_approximation_y = yhat;
+        
+        
         
         figure(1), hold on
-        imshow(skin, 'InitialMagnification', 'fit');
+%         
+%         imshow(skin, 'InitialMagnification', 'fit');
+%         subplot(3,1,1)
+%         imshow(cropImage,  'InitialMagnification', 'fit');
+%         colormap parula;
+% 
+%         axis on;
+%         hold on;
+%         plot(c(CH), r(CH), "*-", 'Color', 'r');
+%        
+%         subplot(3,1,2)
+%         imshow(skin4,  'InitialMagnification', 'fit');
+%         colormap parula;
+% 
+%         axis on;
+%         hold on;
+%         plot(c1(CH1), r1(CH1), "*-", 'Color', 'green');
+%         
+        subplot(2,1,1)
+        imshow(cropImage,  'InitialMagnification', 'fit');
+        colormap parula;
+
+        axis on;
+        hold on;
+        plot(c2(CH2), r2(CH2), "*-", 'Color', 'blue');
+%         
+%         
+%         subplot(2,1,2)
+%         imshow(skin_test,  'InitialMagnification', 'fit');
+%         colormap parula;
+% 
+%         axis on;
+%         hold on;
+        plot(sin_approximation_x, sin_approximation_y, "*-", 'Color', 'red');
         hold off
+       
         
 %         imshow(cropImage,'InitialMagnification','fit');
 %         
@@ -76,8 +159,9 @@ function [cropImage, dataTrialArray, nFrames] = pupilAnalysis(howManyPlot, displ
         % 'MinorAxisLength': length of the minor axis of the pupil ellipse
         % 'Area': the number of pixels in the pupilRegion
         % 'BoundingBox': the closest rectangle to the pupilRegion [x, y, width, height] 
-        pupilProperties = regionprops(pupilRegion, 'Centroid','MajorAxisLength','MinorAxisLength', 'Area', 'BoundingBox');
+%         pupilProperties = regionprops(pupilRegion, 'Centroid','MajorAxisLength','MinorAxisLength', 'Area', 'BoundingBox');
         
+        pupilProperties = regionprops(skin_test, 'Centroid','MajorAxisLength','MinorAxisLength', 'Area', 'BoundingBox');
         
         % This piece of code checks whether regionprops was able to
         % identify a pupiilRegion
@@ -87,7 +171,7 @@ function [cropImage, dataTrialArray, nFrames] = pupilAnalysis(howManyPlot, displ
             continue
         end
         
-        dataTrialArray(frameNumber,1) = {pupilProperties(2)};
+        dataTrialArray(frameNumber,1) = {pupilProperties(1)};
         
         % Visualization Protocol
         disp(['Pupil Analysis Trial & Frame ', num2str(trialNumber), ' ', num2str(frameNumber)])
