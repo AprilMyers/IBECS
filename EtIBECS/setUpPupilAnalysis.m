@@ -30,7 +30,7 @@ function [nTrls, dFldr, cFNames, aTrl, sTrl, nCam1, nCam2, nLick, nMWhl,...
     
     % find files
     dFldr = [dFldr '\'];
-    cFNames = num2cell(ls(dFldr),2); %cell array of file names
+    cFNames = num2cell(lswindows(dFldr),2); %cell array of file names
     fSesh = cellContainsStr(cFNames,seshN); % Session files
     fCam1 = cellContainsStr(cFNames,nCam1); %Camera 1 files
     fCam2 = cellContainsStr(cFNames,nCam2);
