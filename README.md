@@ -1,8 +1,8 @@
 # IBECS
-	IBECS is a pupil-analysis software for MATLAB. It takes in a PostCond file and calculates the following information: 
-⋅⋅* The area and dimensions of each pupil through the duration of every trial in the file
-⋅⋅* A graph of each pupil's dimensions contrasted against stimuli data
-⋅⋅* Foo 
+IBECS is a pupil-analysis software for MATLAB. It takes in a PostCond file and calculates the following information: 
+  * The area and dimensions of each pupil through the duration of every trial in the file
+  * A graph of each pupil's dimensions contrasted against stimuli data
+  * Foo 
 
 ## Getting Started
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. 
@@ -42,7 +42,7 @@ After choosing the data you wish to be analyzed, you will be prompted to crop a 
 2. Select a bounding box for the parts of the pupil that are cut off. For example, if the top and bottom of the pupil are obfuscated by eyelids foobar.
 
 ### Authors
-⋅⋅* Ryan Natan - Postdoc Project Supervisor - UC Berkeley Systems of Neuroscience
-⋅⋅* April Myers - Graduate Student Advisor - UC Berkeley Vision Science  
-⋅⋅* Ethan Mehta - Undergraduate Research Apprentice - UC Berkeley MET
-⋅⋅* Varun Srivastava - Undergraduate Research Apprentice - UC Berkeley L&S
+  * Ryan Natan - Postdoc Project Supervisor - UC Berkeley Systems of Neuroscience
+  * April Myers - Graduate Student Advisor - UC Berkeley Vision Science    
+  * Ethan Mehta - Undergraduate Research Apprentice - UC Berkeley MET
+  * Varun Srivastava - Undergraduate Research Apprentice - UC Berkeley L&S
